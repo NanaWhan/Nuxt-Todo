@@ -1,8 +1,8 @@
 <template>
   <div class="task_card mt-5" :class="task.completed ? 'border-complete' : 'border-active'">
-    <div class="task_card_head p-5 pb-2 ">
+    <div class="task_card_head p-5 pb-2">
       <div class="task_card_action text-light info-text">
-        <span @click="$emit('editTask')">Edit</span>
+        <span @click="$emit('editTask', task)">Edit</span> 
         <span @click="$emit('deleteTask')">Delete</span>
         <span @click="$emit('toggleComplete')">
           {{ task.completed ? 'Mark as Active' : 'Complete' }}

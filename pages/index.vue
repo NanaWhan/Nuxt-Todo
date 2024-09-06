@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useTaskStore } from '@/stores/TaskStore';
 import AddTask from '@/components/AddTask.vue';
 import TaskCard from '@/components/TaskCard.vue';
@@ -7,19 +7,25 @@ import TaskCard from '@/components/TaskCard.vue';
 const showDialog = ref(false);
 const taskStore = useTaskStore();
 
-// Toggle dialog visibility
+onMounted(() => {
+  taskStore.fetchTasks();
+});
+
 function toggleDialog() {
   showDialog.value = !showDialog.value;
 }
 
-// Computed properties for active and completed tasks
 const activeTasks = computed(() => taskStore.tasks.filter(task => !task.completed));
 const completedTasks = computed(() => taskStore.tasks.filter(task => task.completed));
 </script>
 
 <template>
   <div class="todo_wrapper">
-    <div class="todo_task-list">
+    <!-- Display loading state -->
+    <div v-if="taskStore.loading">Loading tasks...</div>
+    <div v-if="taskStore.error">Error loading tasks: {{ taskStore.error }}</div>
+
+    <div class="todo_task-list" v-else>
       <div class="todo_add">
         <button class="btn" @click="toggleDialog">Add a new task</button>
       </div>

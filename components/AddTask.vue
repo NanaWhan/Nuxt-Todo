@@ -2,7 +2,7 @@
   <div class="dialog">
     <div class="dialog_content">
       <div class="dialog_head">
-        <h2>Add new task</h2>
+        <h2>{{ taskToEdit ? 'Edit Task' : 'Add New Task' }}</h2>
         <button @click="onClickCancel">
           <img src="../assets/icons/cancel.png" width="25" alt="close" />
         </button>
@@ -22,7 +22,7 @@
         <span v-if="errors.date" class="error">{{ errors.date }}</span>
 
         <div class="form_action">
-          <button class="btn" @click="submitForm">Submit</button>
+          <button class="btn" @click="submitForm">{{ taskToEdit ? 'Update' : 'Submit' }}</button>
         </div>
       </div>
     </div>
@@ -30,42 +30,50 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch, onMounted } from "vue";
 import { useTaskStore } from "@/stores/TaskStore";
-import { defineEmits } from "vue";
+import { defineEmits, defineProps } from "vue";
 import { isBefore } from "date-fns"; 
 
 const emit = defineEmits(["close"]);
+const props = defineProps({
+  taskToEdit: {
+    type: Object,
+    default: null
+  },
+});
+
+const taskStore = useTaskStore();
 
 const title = ref("");
 const description = ref("");
 const date = ref("");
-
 const errors = ref({
   title: "",
   description: "",
   date: "",
 });
 
-const taskStore = useTaskStore();
+onMounted(() => {
+  if (props.taskToEdit) {
+    title.value = props.taskToEdit.title;
+    description.value = props.taskToEdit.description;
+    date.value = props.taskToEdit.date;
+  }
+});
 
 function validateForm() {
   let isValid = true;
-
-  // Clear previous errors
   errors.value = { title: "", description: "", date: "" };
 
-  // Check if title is empty
   if (!title.value) {
     errors.value.title = "Task title is required";
     isValid = false;
   }
-
   if (!description.value) {
     errors.value.description = "Description is required";
     isValid = false;
   }
-
   if (!date.value) {
     errors.value.date = "Expiry date is required";
     isValid = false;
@@ -86,13 +94,18 @@ function resetForm() {
 function submitForm() {
   if (!validateForm()) return;
 
-  const newTask = {
+  const taskData = {
     title: title.value,
     description: description.value,
     date: date.value,
   };
 
-  taskStore.addTask(newTask);
+  if (props.taskToEdit) {
+    taskStore.editTask(taskStore.tasks.indexOf(props.taskToEdit), taskData); // Edit the existing task
+  } else {
+    taskStore.addTask(taskData); 
+  }
+
   emit("close", true);
   resetForm();
 }
